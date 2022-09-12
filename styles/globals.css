@@ -1,26 +1,54 @@
-html,
-body {
-  padding: 0;
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.cross {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.cross::before,
+.cross::after {
+    position: absolute;
+    content: '';
+    width: 100%;
+    height: 2px;
+    background-color: rgb(100,100,250);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+.cross::before {
+    transform: rotate(45deg);
 }
 
-* {
-  box-sizing: border-box;
+.cross::after {
+    transform: rotate(-45deg);
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
-  body {
-    color: white;
-    background: black;
-  }
+.point {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.point::before
+ {
+    position: absolute;
+    content: '';
+    border-radius: 100%;
+    height: 3px;
+    width:  3px;
+    background-color: rgb(100, 100, 250);
+}
+
+.ship{
+    border:3px solid;
+    border-color: rgb(100, 100, 250);
+}
+
+.cell{
+    border: 1px solid;
+    color: rgb(217, 70, 239);
 }

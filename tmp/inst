@@ -1,0 +1,4 @@
+npx create-next-app@latest --ts
+npm install -D tailwindcss postcss autoprefixer
+npx tailwind init
+--was forced to delete .next folder here without it tailwind do not wanted to work

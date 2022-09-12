@@ -1,0 +1,17 @@
+{"games":[
+  {"name": "game1",
+   "lastActive":"",
+   "active":true,
+   "fileName":"1.json"},
+  
+   {"name": "game2",
+   "lastActive":"",
+   "active":true,
+   "fileName":"2.json"},
+  
+   {"name": "game3",
+   "lastActive":"",
+   "active":true,
+   "fileName":"3.json"}
+ ]
+}
