@@ -1,152 +1,21 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import styles from "../styles/Home.module.css";
-import Row, { RowProps } from "../src/components/Row";
 import Field, { FieldProps } from "../src/components/Field";
-const Home: NextPage = () => {
-  const FieldProps: FieldProps = {
-    rows: [
-      {
-        cells: [
-          { shelled: false, ship: true },
-          { shelled: false, ship: true },
-          { shelled: true, ship: true },
-          { shelled: false, ship: true },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: true, ship: false },
-          { shelled: true, ship: false },
-          { shelled: true, ship: false },
-          { shelled: false, ship: false },
-        ],
-      },
-      {
-        cells: [
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-        ],
-      },
-      {
-        cells: [
-          { shelled: false, ship: true },
-          { shelled: false, ship: true },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-        ],
-      },
-      {
-        cells: [
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-        ],
-      },
-      {
-        cells: [
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: true, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: true, ship: false },
-          { shelled: true, ship: false },
-          { shelled: true, ship: false },
-          { shelled: false, ship: false },
-        ],
-      },
-      {
-        cells: [
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-        ],
-      },
-      {
-        cells: [
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-        ],
-      },
-      {
-        cells: [
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-        ],
-      },
-      {
-        cells: [
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-        ],
-      },
-      {
-        cells: [
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-          { shelled: false, ship: false },
-        ],
-      },
-    ],
+import * as gameAPILib from "../src/utils/gameAPILib";
+import { Coords } from "../src/utils/types";
+
+export async function getServerSideProps(context: any) {
+  const data = await gameAPILib.createGame("test");
+  return {
+    props: data.player0.field, // will be passed to the page component as props
+  };
+}
+
+const Home: NextPage<FieldProps> = (props: FieldProps) => {
+  const FieldProps = props;
+  const handleCellClick = (coords: Coords) => {
+    console.log(coords);
   };
   return (
     <div className={styles.container}>
@@ -155,7 +24,7 @@ const Home: NextPage = () => {
         <meta name="description" content="Sea fight game" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Field rows={FieldProps.rows} />
+      <Field rows={FieldProps.rows} onCellClick={handleCellClick} />
     </div>
   );
 };

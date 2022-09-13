@@ -1,7 +1,22 @@
 import { getCls } from "../utils/utils";
-export type CellProps = { shelled?: boolean; ship?: boolean };
+import { Coords } from "../utils/types";
 
-export default function Cell({ shelled = false, ship = false }: CellProps) {
+export type CellProps = {
+  shelled?: boolean;
+  ship?: boolean;
+  coords: Coords;
+  onClick?: (coords: Coords) => void;
+};
+
+export default function Cell({
+  shelled = false,
+  ship = false,
+  onClick,
+  coords,
+}: CellProps) {
+  const handleClick = (e: React.FormEvent<HTMLDivElement>) => {
+    if (onClick) onClick(coords);
+  };
   const classes = getCls({
     ship: ship,
     cross: ship && shelled,
@@ -10,7 +25,11 @@ export default function Cell({ shelled = false, ship = false }: CellProps) {
   });
   return (
     <>
-      <div className={classes} style={{ width: 30, height: 30 }}></div>
+      <div
+        onClick={handleClick}
+        className={classes}
+        style={{ width: 30, height: 30 }}
+      ></div>
     </>
   );
 }
