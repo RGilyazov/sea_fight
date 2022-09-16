@@ -1,6 +1,6 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
-import * as gameAPILib from "../../src/utils/gameAPILib";
+import * as gameAPILib from "../../src/sever/gameAPIServerLib";
 
 type Data = {
   name: Date;

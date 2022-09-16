@@ -1,5 +1,5 @@
 import Cell from "./Cell";
-import { CellData, Coords } from "../utils/types";
+import { CellData, Coords } from "../../types";
 export type RowProps = {
   cells: CellData[];
   row: number;

@@ -7,18 +7,21 @@ export type FieldData = { rows: RowData[] };
 
 export type Coords = { row: number; col: number };
 
-export type PlayerData = { field: FieldData };
+export type PlayerData = { ready: boolean; field: FieldData; secret: string };
 
 export enum gameStages {
   WaitingForPlayer = "WaitingForPlayer",
   Placement = "Placement",
   Game = "Game",
 }
-
+export enum Players {
+  player0 = "player0",
+  player1 = "player1",
+}
 export type GameData = {
   id: string;
   stage: gameStages;
-  turn: number;
+  turn: Players;
   player0: PlayerData;
   player1: PlayerData;
 };

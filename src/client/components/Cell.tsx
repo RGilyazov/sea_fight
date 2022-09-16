@@ -1,5 +1,5 @@
-import { getCls } from "../utils/utils";
-import { Coords } from "../utils/types";
+import { getCls } from "../../sever/utils";
+import { Coords } from "../../types";
 
 export type CellProps = {
   shelled?: boolean;

@@ -1,4 +1,4 @@
-import { RowData, Coords } from "../utils/types";
+import { RowData, Coords } from "../../types";
 import Row from "./Row";
 
 export type FieldProps = {

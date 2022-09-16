@@ -1,9 +1,9 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import styles from "../styles/Home.module.css";
-import Field, { FieldProps } from "../src/components/Field";
-import * as gameAPILib from "../src/utils/gameAPILib";
-import { Coords } from "../src/utils/types";
+import Field, { FieldProps } from "../src/client/components/Field";
+import * as gameAPILib from "../src/sever/gameAPIServerLib";
+import { Coords } from "../src/types";
 
 export async function getServerSideProps(context: any) {
   const data = await gameAPILib.createGame("test");

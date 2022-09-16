@@ -1,50 +1,24 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import styles from "../styles/Home.module.css";
-import Field from "../src/components/Field";
-import { Coords, GameData } from "../src/utils/types";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import GamePlacement from "../src/client/components/GamePlacement";
 
-type GamePops = {};
+type GamePagePops = {};
 
-const Game: NextPage<GamePops> = () => {
+const GamePage: NextPage<GamePagePops> = () => {
   const router = useRouter();
   const id = String(router.query["id"]);
-  const [mtime, setMtime] = useState(0);
-  const [game, setGame] = useState<GameData | undefined>(undefined);
 
-  useEffect(() => {
-    let interval = window.setInterval(() => {
-      fetch(`/api/getGameChangeTime?id=${id}`)
-        .then((response) => response.json())
-        .then((newMtime) => setMtime(newMtime));
-    }, 1000);
-    return () => {
-      window.clearInterval(interval);
-    };
-  }, [id]);
-
-  useEffect(() => {
-    fetch(`/api/getGame?id=${id}`)
-      .then((response) => response.json())
-      .then((newGame) => setGame(newGame));
-  }, [id, mtime]);
-
-  const handleCellClick = (coords: Coords) => {
-    console.log(coords);
-  };
-  if (!game) return <div>Loading...</div>;
   return (
-    <div className={styles.container}>
+    <div>
       <Head>
         <title>Sea fight</title>
         <meta name="description" content="Sea fight game" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Field rows={game?.player0.field.rows} onCellClick={handleCellClick} />
+      <GamePlacement id={id} />
     </div>
   );
 };
 
-export default Game;
+export default GamePage;
