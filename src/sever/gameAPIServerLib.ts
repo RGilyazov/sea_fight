@@ -53,11 +53,13 @@ async function getPlayer(secret: string, data: GameData): Promise<Players> {
       player = Players.player0;
       data.player0.secret = secret;
       console.log("joined player0", data.player0.secret);
+      calculateGameStage(data);
       await Game.saveGame(data);
     } else if (!data.player1.secret) {
       player = Players.player1;
       data.player1.secret = secret;
       console.log("joined player1", data.player0.secret);
+      calculateGameStage(data);
       await Game.saveGame(data);
     }
   }
@@ -90,7 +92,10 @@ function calculateGameForPlayer(gameData: GameData, player: Players) {
     const d = gameData[opponent];
     gameData[opponent] = gameData[player];
     gameData[player] = d;
+    gameData.turn =
+      gameData.turn === player ? Players.player0 : Players.player1;
   }
+  return gameData;
 }
 
 export async function getGameChangeTime(id: string) {
@@ -112,6 +117,13 @@ export async function getGameForPlayer(
   return data;
 }
 
+function calculateGameStage(data: GameData) {
+  if (data.player0.ready && data.player1.ready) data.stage = gameStages.Game;
+  else if (data.player0.secret && data.player1.secret)
+    data.stage = gameStages.Placement;
+  else data.stage = gameStages.WaitingForPlayer;
+}
+
 export async function setPlacement(
   id: string,
   secret: string,
@@ -119,10 +131,12 @@ export async function setPlacement(
 ) {
   const data = await Game.getGame(id);
   const player = await getPlayer(secret, data);
+  if (![gameStages.Placement, gameStages.WaitingForPlayer].includes(data.stage))
+    return calculateGameForPlayer(data, player);
+
   if (!data[player].ready) data[player].field = field;
   data[player].ready = !data[player].ready;
-  if (data.player0.ready && data.player1.ready) data.stage = gameStages.Game;
-  else data.stage = gameStages.Placement;
+  calculateGameStage(data);
   await Game.saveGame(data);
   calculateGameForPlayer(data, player);
   return data;
@@ -135,6 +149,8 @@ export async function shell(
 ): Promise<GameData> {
   const data = await Game.getGame(id);
   const player = await getPlayer(secret, data);
+  if (data.turn !== player || data.stage !== gameStages.Game)
+    return calculateGameForPlayer(data, player);
   const opponent = getOpponent(player);
   const cell = data[opponent].field.rows[coords.row].cells[coords.col];
   cell.shelled = !cell.shelled;

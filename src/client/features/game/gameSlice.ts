@@ -2,8 +2,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../../app/store";
 import { Coords, GameData, gameStages, Players } from "../../../types";
 import * as gameAPIClient from "../../gameAPIClientLib";
-import { type } from "os";
-var crypto = require("crypto");
+
 // declaring the types for our state
 export type GameState = {
   gameData: GameData | undefined;
@@ -27,15 +26,28 @@ export const updateGame = createAsyncThunk<
   else return thunkAPI.rejectWithValue(response.error);
 });
 
-export const checkGameUpdates = createAsyncThunk<GameData | undefined, string>(
+export const checkGameUpdates = createAsyncThunk<GameState | undefined, string>(
   "game/checkGameUpdates",
   async (gameId: string, thunkAPI) => {
-    const oldState = thunkAPI.getState() as RootState;
+    let oldState = thunkAPI.getState() as RootState;
     const newMTime = await gameAPIClient.checkGameUpdates(gameId);
-    if (oldState.game.mTime === newMTime) return undefined;
+    if (oldState.game.mTime === newMTime) return;
     const response = await gameAPIClient.loadGameData(gameId);
-    if (response.status === "OK") return response.data;
-    else return thunkAPI.rejectWithValue(response.error);
+    oldState = thunkAPI.getState() as RootState;
+    if (response.status === "OK") {
+      switch (response.data.stage) {
+        case gameStages.Game: {
+          return { mTime: newMTime, gameData: response.data };
+        }
+        default: {
+          const gameData = {
+            ...(oldState.game.gameData as GameData),
+            stage: response.data.stage,
+          };
+          return { mTime: newMTime, gameData: gameData };
+        }
+      }
+    } else return thunkAPI.rejectWithValue(response.error);
   }
 );
 
@@ -86,8 +98,10 @@ export const gameSlice = createSlice({
     });
     builder.addCase(checkGameUpdates.fulfilled, (state, action) => {
       state.error = "";
-      if (action.payload !== undefined) state.gameData = action.payload;
-      console.log("checkGameUpdates.fulfilled", action.payload);
+      if (action.payload !== undefined) {
+        if (action.payload.mTime) state.mTime = action.payload.mTime;
+        if (action.payload.gameData) state.gameData = action.payload.gameData;
+      }
     });
   },
 });

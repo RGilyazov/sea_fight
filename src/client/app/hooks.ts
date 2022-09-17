@@ -12,8 +12,8 @@ export const useGameUpdates = (
   const dispatch = useDispatch<AppDispatch>();
   useEffect(() => {
     let interval = window.setInterval(() => {
-      if (gameStage === gameStages.Game || playerReady)
-        dispatch(checkGameUpdates(id));
+      // if (gameStage === gameStages.Game || playerReady)
+      dispatch(checkGameUpdates(id));
     }, 1000);
     return () => {
       window.clearInterval(interval);
