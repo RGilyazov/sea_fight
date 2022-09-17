@@ -7,23 +7,29 @@ type RespType = {
   error?: string;
   status: string;
 };
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<RespType>
 ) {
-  if (!req.query.id || !req.query.secret) {
+  if (!req.query.id || !req.query.secret || !req.query.row || !req.query.col) {
     res.status(400).json({
       status: "FAILED",
       error:
-        "One of the following parameters is missing or is empty id, secret",
+        "One of the following parameters is missing or is empty id, secret, row, col",
     });
     return;
   }
-  const secret = req.query.secret as string;
-  const id = req.query.id as string;
   try {
-    const data = await gameAPILib.getGameForPlayer(id, secret);
-    res.status(200).json({ data: data, status: "OK" });
+    const data = await gameAPILib.shell(
+      String(req.query.id),
+      String(req.query.secret),
+      {
+        row: Number(req.query.row),
+        col: Number(req.query.col),
+      }
+    );
+    res.status(200).json({ status: "OK", data: data });
   } catch (err: any) {
     res
       .status(err?.status || 500)

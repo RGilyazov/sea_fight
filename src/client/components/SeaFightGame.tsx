@@ -1,4 +1,3 @@
-import type { NextPage } from "next";
 import Field from "./Field";
 import { Coords } from "../../types";
 import { useSelector, useDispatch } from "react-redux";
@@ -7,9 +6,10 @@ import {
   selectStage,
   setShip,
   updateGame,
+  setGameData,
 } from "../features/game/gameSlice";
 import { AppDispatch } from "../app/store";
-import { makeAction, SECRET } from "../gameAPIClientLib";
+import { SECRET, setPlacement, shell } from "../gameAPIClientLib";
 import Button from "./Button";
 import { useEffect } from "react";
 import { useGameUpdates } from "../app/hooks";
@@ -17,43 +17,35 @@ type GamePops = { id: string };
 
 export default function GamePlacement({ id }: GamePops) {
   const dispatch = useDispatch<AppDispatch>();
-  const { gameData } = useSelector(selectGame);
+  const { gameData, error } = useSelector(selectGame);
   const gameStage = useSelector(selectStage);
-  console.log("rendering", gameData);
 
+  console.log("rendering", gameData);
   //loading game state from server only on first render
   useEffect(() => {
     dispatch(updateGame(id));
   }, [id, dispatch]);
 
-  useGameUpdates(id, gameStage);
+  useGameUpdates(id, gameStage, gameData?.player0?.ready === true);
 
   const handleAdd = () => {
     if (gameData)
-      makeAction(
-        "setPlacement",
-        { id },
-        (data: any) => console.log(data),
-        gameData.player0.field
-      );
+      setPlacement(id, gameData.player0.field, (data: any) => {
+        if ((data.status = "OK")) dispatch(setGameData(data.data));
+      });
   };
 
   const handleCellClickField1 = (coords: Coords) => {
     dispatch(setShip(coords));
   };
   const handleCellClickField2 = (coords: Coords) => {
-    makeAction(
-      "shell",
-      {
-        id,
-        col: coords.col.toString(),
-        row: coords.row.toString(),
-      },
-      (data: any) => console.log(data)
-    );
+    shell(id, coords, (data: any) => {
+      if ((data.status = "OK")) dispatch(setGameData(data.data));
+    });
   };
+  if (error) return <div>{error}</div>;
   if (!gameData) return <div>Loading...</div>;
-  console.log("rendering game comp", gameData, gameData.player0.ready);
+
   return (
     <div>
       <div>turn={gameData.turn}</div>

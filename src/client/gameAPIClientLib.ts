@@ -1,4 +1,4 @@
-import { Players } from "../types";
+import { Coords, FieldData, GameList } from "../types";
 let _secret = "";
 if (typeof window !== "undefined") {
   // Perform localStorage action
@@ -9,29 +9,39 @@ if (typeof window !== "undefined") {
   }
 }
 export const SECRET = _secret;
-export const makeAction = (
-  action: string,
-  params: Record<string, string>,
-  callback?: (data: any) => void,
-  data?: any
+
+export const shell = async (
+  gameId: string,
+  coords: Coords,
+  callback?: (data: any) => void
 ) => {
-  let queryString = `/api/makeAction?action=${action}&secret=${SECRET}`;
-  for (let key of Object.keys(params)) {
-    queryString = queryString + `&${key}=${params[key]}`;
-  }
+  fetch(
+    `/api/shell?id=${gameId}&secret=${SECRET}&row=${coords.row}&col=${coords.col}`
+  ).then((response) =>
+    response.json().then((data) => {
+      if (callback) callback(data);
+    })
+  );
+};
+
+export const setPlacement = async (
+  gameId: string,
+  field: FieldData,
+  callback?: (data: any) => void
+) => {
   const body = {
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
     },
     method: "POST",
-    body: JSON.stringify(data),
+    body: JSON.stringify(field),
   };
-  //to do. force game reload using callback
-  fetch(queryString, body).then((response) =>
-    response.json().then((data) => {
-      if (callback) callback(data);
-    })
+  fetch(`/api/setPlacement?id=${gameId}&secret=${SECRET}`, body).then(
+    (response) =>
+      response.json().then((data) => {
+        if (callback) callback(data);
+      })
   );
 };
 
@@ -44,5 +54,11 @@ export const checkGameUpdates = async (gameId: string) => {
   const response = await fetch(
     `/api/getGameChangeTime?id=${gameId}&secret=${SECRET}`
   );
+  const res = await response.json();
+  return res.time;
+};
+
+export const gatGameList = async () => {
+  const response = await fetch(`/api/games`);
   return await response.json();
 };

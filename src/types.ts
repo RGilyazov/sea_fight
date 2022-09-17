@@ -25,3 +25,7 @@ export type GameData = {
   player0: PlayerData;
   player1: PlayerData;
 };
+
+export type GameList = {
+  games: { id: string; lastModified: Date }[];
+};

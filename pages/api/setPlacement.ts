@@ -19,11 +19,13 @@ export default async function handler(
     });
     return;
   }
-  const secret = req.query.secret as string;
-  const id = req.query.id as string;
   try {
-    const data = await gameAPILib.getGameForPlayer(id, secret);
-    res.status(200).json({ data: data, status: "OK" });
+    const data = await gameAPILib.setPlacement(
+      String(req.query.id),
+      String(req.query.secret),
+      req.body
+    );
+    res.status(200).json({ status: "OK", data: data });
   } catch (err: any) {
     res
       .status(err?.status || 500)

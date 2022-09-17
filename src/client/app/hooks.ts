@@ -4,16 +4,21 @@ import { useEffect } from "react";
 import { checkGameUpdates } from "../features/game/gameSlice";
 import { gameStages } from "../../types";
 
-export const useGameUpdates = (id: string, gameStage: gameStages) => {
+export const useGameUpdates = (
+  id: string,
+  gameStage: gameStages,
+  playerReady: boolean
+) => {
   const dispatch = useDispatch<AppDispatch>();
   useEffect(() => {
     let interval = window.setInterval(() => {
-      if (gameStage === gameStages.Game) dispatch(checkGameUpdates(id));
+      if (gameStage === gameStages.Game || playerReady)
+        dispatch(checkGameUpdates(id));
     }, 1000);
     return () => {
       window.clearInterval(interval);
     };
-  }, [id, gameStage, dispatch]);
+  }, [id, gameStage, playerReady, dispatch]);
 };
 
 export const useAppDispatch = () => useDispatch<AppDispatch>();

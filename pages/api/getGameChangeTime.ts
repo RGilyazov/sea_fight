@@ -1,19 +1,30 @@
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 import * as gameAPILib from "../../src/sever/gameAPIServerLib";
 
-type Data = {
-  name: Date;
+type RespType = {
+  time?: Date;
+  error?: string;
+  status: string;
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<Data>
+  res: NextApiResponse<RespType>
 ) {
-  if (req.query.id != undefined) {
-    const data = await gameAPILib.getGameChangeTime(String(req.query.id));
-    res.status(200).json(data);
-  } else {
-    throw new Error("parameter <id> do not found");
+  if (!req.query.id) {
+    res.status(400).json({
+      status: "FAILED",
+      error: "parameter ID is missing or is empty",
+    });
+    return;
+  }
+  const id = req.query.id as string;
+  try {
+    const data = await gameAPILib.getGameChangeTime(id);
+    res.status(200).json({ time: data, status: "OK" });
+  } catch (err: any) {
+    res
+      .status(err?.status || 500)
+      .json({ error: err?.message || err, status: "FAILED" });
   }
 }

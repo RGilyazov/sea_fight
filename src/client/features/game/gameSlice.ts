@@ -8,6 +8,7 @@ var crypto = require("crypto");
 export type GameState = {
   gameData: GameData | undefined;
   mTime: Date | undefined;
+  error?: string;
 };
 
 const initialState: GameState = {
@@ -21,11 +22,9 @@ export const updateGame = createAsyncThunk<
   string,
   { state: RootState }
 >("game/updateGame", async (gameId: string, thunkAPI) => {
-  const oldState = thunkAPI.getState() as RootState;
   const response = await gameAPIClient.loadGameData(gameId);
-  //console.log("resp received", gameId, response);
   if (response.status === "OK") return response.data;
-  else return oldState.game.gameData;
+  else return thunkAPI.rejectWithValue(response.error);
 });
 
 export const checkGameUpdates = createAsyncThunk<GameData | undefined, string>(
@@ -34,8 +33,9 @@ export const checkGameUpdates = createAsyncThunk<GameData | undefined, string>(
     const oldState = thunkAPI.getState() as RootState;
     const newMTime = await gameAPIClient.checkGameUpdates(gameId);
     if (oldState.game.mTime === newMTime) return undefined;
-    const gameData = await gameAPIClient.loadGameData(gameId);
-    return gameData;
+    const response = await gameAPIClient.loadGameData(gameId);
+    if (response.status === "OK") return response.data;
+    else return thunkAPI.rejectWithValue(response.error);
   }
 );
 
@@ -66,6 +66,7 @@ export const gameSlice = createSlice({
       state.mTime = action.payload;
     },
     setGameData: (state, action: PayloadAction<GameData>) => {
+      console.log("setGameData", action.payload);
       state.gameData = action.payload;
     },
     setShip: (state, action: PayloadAction<Coords>) => {
@@ -78,18 +79,24 @@ export const gameSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder.addCase(updateGame.fulfilled, (state, action) => {
-      //console.log("updateGame.fulfilled", action.payload);
       state.gameData = action.payload;
     });
+    builder.addCase(updateGame.rejected, (state, action) => {
+      state.error = String(action.payload);
+    });
     builder.addCase(checkGameUpdates.fulfilled, (state, action) => {
+      state.error = "";
       if (action.payload !== undefined) state.gameData = action.payload;
+      console.log("checkGameUpdates.fulfilled", action.payload);
     });
   },
 });
 
 export const { setMtime, setGameData, setShip } = gameSlice.actions;
-
-export const selectGame = (state: RootState) => state.game;
+export const selectError = (state: RootState) => state.game.error;
+export const selectGame = (state: RootState) => {
+  return state.game;
+};
 export const selectStage = (state: RootState) => {
   if (state.game.gameData) return state.game.gameData.stage;
   return gameStages.Placement;

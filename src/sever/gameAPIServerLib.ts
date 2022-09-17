@@ -1,5 +1,3 @@
-//functions used to make API work on server side
-import path from "path";
 import {
   GameData,
   RowData,
@@ -8,86 +6,10 @@ import {
   gameStages,
   FieldData,
   Players,
+  Coords,
+  GameList,
 } from "../types";
-import { getOpponent } from "./utils";
-
-const fsAsync = require("fs").promises;
-const ROOT_DIR = path.join(process.cwd(), "data/");
-
-function gameFilePath(id: string) {
-  return ROOT_DIR + `/games/game/${id}.json`;
-}
-
-export const gameAPI = {
-  getGame,
-};
-export async function getGameChangeTime(id: string) {
-  try {
-    const stats = await fsAsync.stat(gameFilePath(id));
-    return stats.mtime;
-  } catch (error) {
-    return undefined;
-  }
-}
-export async function getGame(id: string): Promise<GameData> {
-  let data: undefined | GameData;
-  try {
-    const jsonData = await fsAsync.readFile(gameFilePath(id), "utf8");
-    return JSON.parse(jsonData);
-  } catch (error) {
-    return createGame(id);
-  }
-}
-
-export async function getPlayer(
-  secret: string,
-  data: GameData
-): Promise<Players | undefined> {
-  let player: Players | undefined = undefined;
-  if (data.player0.secret === secret) {
-    player = Players.player0;
-  } else if (data.player1.secret === secret) {
-    player = Players.player1;
-  }
-  if (!player) {
-    if (!data.player0.secret) {
-      player = Players.player0;
-      data.player0.secret = secret;
-      await saveGame(data);
-    } else if (!data.player1.secret) {
-      player = Players.player1;
-      data.player1.secret = secret;
-      await saveGame(data);
-    }
-  }
-  return player;
-}
-
-export async function getGameForPlayer(
-  id: string,
-  secret: string
-): Promise<GameData> {
-  const data = await getGame(id);
-
-  const player = await getPlayer(secret, data);
-  if (!player) throw new Error("game is full");
-
-  const opponent = getOpponent(player);
-  const rows = data[opponent].field.rows;
-  data[opponent].secret = "";
-
-  for (let row of rows) {
-    for (let cell of row.cells) {
-      if (!cell.shelled) cell.ship = false;
-    }
-  }
-  if (player != Players.player0) {
-    const d = data[opponent];
-    data[opponent] = data[player];
-    data[player] = d;
-  }
-  return data;
-}
+import * as Game from "./database/game";
 
 function CreateRow(): RowData {
   const res: RowData = { cells: [] };
@@ -96,6 +18,7 @@ function CreateRow(): RowData {
   }
   return res;
 }
+
 function createField(): FieldData {
   const rows = [];
   for (let i = 0; i < MAX_ROWS; i++) {
@@ -105,7 +28,7 @@ function createField(): FieldData {
   return res;
 }
 
-export async function createGame(id: string): Promise<GameData> {
+async function createGame(id: string): Promise<GameData> {
   const res: GameData = {
     id,
     stage: gameStages.WaitingForPlayer,
@@ -113,10 +36,115 @@ export async function createGame(id: string): Promise<GameData> {
     player0: { ready: false, field: createField(), secret: "" },
     player1: { ready: false, field: createField(), secret: "" },
   };
-  saveGame(res);
+  Game.saveGame(res);
   return res;
 }
-export async function saveGame(GameData: GameData) {
-  const jsonData = JSON.stringify(GameData);
-  await fsAsync.writeFile(gameFilePath(GameData.id), jsonData);
+
+async function getPlayer(secret: string, data: GameData): Promise<Players> {
+  let player: Players | undefined = undefined;
+  if (data.player0.secret === secret) {
+    player = Players.player0;
+  } else if (data.player1.secret === secret) {
+    player = Players.player1;
+  }
+
+  if (!player) {
+    if (!data.player0.secret) {
+      player = Players.player0;
+      data.player0.secret = secret;
+      console.log("joined player0", data.player0.secret);
+      await Game.saveGame(data);
+    } else if (!data.player1.secret) {
+      player = Players.player1;
+      data.player1.secret = secret;
+      console.log("joined player1", data.player0.secret);
+      await Game.saveGame(data);
+    }
+  }
+  if (!player)
+    throw {
+      status: 400,
+      message: "wrong secret. player is not in this game. game is full",
+    };
+
+  return player;
+}
+
+function getOpponent(player: Players): Players {
+  let opponent = Players.player1;
+  if (player != "player0") opponent = Players.player0;
+  return opponent;
+}
+
+function calculateGameForPlayer(gameData: GameData, player: Players) {
+  const opponent = getOpponent(player);
+  const rows = gameData[opponent].field.rows;
+  gameData[opponent].secret = "";
+
+  for (let row of rows) {
+    for (let cell of row.cells) {
+      if (!cell.shelled) cell.ship = false;
+    }
+  }
+  if (player != Players.player0) {
+    const d = gameData[opponent];
+    gameData[opponent] = gameData[player];
+    gameData[player] = d;
+  }
+}
+
+export async function getGameChangeTime(id: string) {
+  return await Game.getGameChangeTime(id);
+}
+
+export async function getGameForPlayer(
+  id: string,
+  secret: string
+): Promise<GameData> {
+  let data;
+  try {
+    data = await Game.getGame(id);
+  } catch (err) {
+    data = await createGame(id);
+  }
+  const player = await getPlayer(secret, data);
+  calculateGameForPlayer(data, player);
+  return data;
+}
+
+export async function setPlacement(
+  id: string,
+  secret: string,
+  field: FieldData
+) {
+  const data = await Game.getGame(id);
+  const player = await getPlayer(secret, data);
+  if (!data[player].ready) data[player].field = field;
+  data[player].ready = !data[player].ready;
+  if (data.player0.ready && data.player1.ready) data.stage = gameStages.Game;
+  else data.stage = gameStages.Placement;
+  await Game.saveGame(data);
+  calculateGameForPlayer(data, player);
+  return data;
+}
+
+export async function shell(
+  id: string,
+  secret: string,
+  coords: Coords
+): Promise<GameData> {
+  const data = await Game.getGame(id);
+  const player = await getPlayer(secret, data);
+  const opponent = getOpponent(player);
+  const cell = data[opponent].field.rows[coords.row].cells[coords.col];
+  cell.shelled = !cell.shelled;
+  if (!cell.ship) data.turn = opponent;
+  Game.saveGame(data);
+  calculateGameForPlayer(data, player);
+  return data;
+}
+
+export async function getGameList(): Promise<GameList> {
+  const data = await Game.getGameList();
+  return data;
 }

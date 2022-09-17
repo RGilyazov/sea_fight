@@ -1,4 +1,4 @@
-import { getCls } from "../../sever/utils";
+import { getCls } from "../app/utils";
 import { Coords } from "../../types";
 
 export type CellProps = {

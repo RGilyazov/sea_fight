@@ -1,14 +1,14 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import GamePlacement from "../src/client/components/GamePlacement";
+import GamePlacement from "../../src/client/components/SeaFightGame";
 
 type GamePagePops = {};
 
 const GamePage: NextPage<GamePagePops> = () => {
   const router = useRouter();
-  const id = String(router.query["id"]);
-
+  const { gameId } = router.query;
+  if (gameId === undefined) return <div>Loading...</div>;
   return (
     <div>
       <Head>
@@ -16,7 +16,7 @@ const GamePage: NextPage<GamePagePops> = () => {
         <meta name="description" content="Sea fight game" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <GamePlacement id={id} />
+      <GamePlacement id={gameId.toString()} />
     </div>
   );
 };
