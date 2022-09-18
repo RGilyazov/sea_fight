@@ -73,15 +73,25 @@ export default function GamePlacement({ id }: GamePops) {
   }
 
   return (
-    <div>
-      <div>{GameStageDescription}</div>
-      <div className="hidden">secret={SECRET}</div>
-      <div className="flex flex-row gap-10">
-        <div>
+    <div className="flex flex-row justify-center">
+      <div>
+        <div className="bg-teal-50 rounded-lg p-4 shadow-lg mb-2">
+          {GameStageDescription}
+        </div>
+        <div className="hidden">secret={SECRET}</div>
+        <div className="flex flex-row flex-wrap justify-center gap-10 ">
+          <div>
+            <Field
+              rows={gameData?.player0.field.rows}
+              onCellClick={handleCellClickField1}
+            />
+          </div>
           <Field
-            rows={gameData?.player0.field.rows}
-            onCellClick={handleCellClickField1}
+            rows={gameData?.player1.field.rows}
+            onCellClick={handleCellClickField2}
           />
+        </div>
+        <div className="bg-teal-50 rounded-lg p-4 shadow-lg mt-2 mb-2">
           {[gameStages.Placement, gameStages.WaitingForPlayer].includes(
             gameStage
           ) && (
@@ -92,10 +102,6 @@ export default function GamePlacement({ id }: GamePops) {
             />
           )}
         </div>
-        <Field
-          rows={gameData?.player1.field.rows}
-          onCellClick={handleCellClickField2}
-        />
       </div>
     </div>
   );

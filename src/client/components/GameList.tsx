@@ -25,29 +25,31 @@ export default function GameList() {
     return <div> Loading</div>;
   }
   return (
-    <div className="flex flex-col items-center ">
-      <h1 className="text-2xl"> Select game to join:</h1>
-      <div className="flex flex-col gap-2">
-        {gameList
-          .filter((el) => el.playersCount === 1)
-          .map((el) => (
-            <div className="" key={el.id}>
-              <Link href={`./games/${el.id}`}>
-                <span className="hover:underline cursor-pointer text-2xl ">
-                  {el.id + "   " + el.playersCount + " players"}
-                </span>
+    <div className="flex flex-col items-center m-4">
+      <div className="flex flex-col w-fit items-center bg-teal-50 rounded-lg p-4 shadow-2xl">
+        <h1 className="text-2xl"> Select game to join:</h1>
+        <div className="flex flex-col gap-2">
+          {gameList
+            .filter((el) => el.playersCount === 1)
+            .map((el) => (
+              <Link key={el.id} href={`./games/${el.id}`}>
+                <div className="hover:bg-blue-400 hover:shadow-2xl rounded-lg p-2 transition-all duration-500 cursor-pointer">
+                  <span className="text-xl ">
+                    {el.id + "   " + el.playersCount + " players"}
+                  </span>
+                </div>
               </Link>
-            </div>
-          ))}
-        <div className="flex flex-row items-center">
-          <input
-            id="newGameInput"
-            placeholder="enter new game name"
-            className="border-2 text-2xl flex-1 text-blue-900 mr-1"
-            value={newGameName}
-            onChange={handleChange}
-          ></input>
-          <Button caption="new game" onClick={handleClick} />
+            ))}
+          <div className="flex flex-row items-stretch  gap-2">
+            <input
+              id="newGameInput"
+              placeholder="enter new game name"
+              className="border-2 text-xl flex-1 text-blue-900"
+              value={newGameName}
+              onChange={handleChange}
+            ></input>
+            <Button caption="new game" onClick={handleClick} />
+          </div>
         </div>
       </div>
     </div>
