@@ -13,6 +13,7 @@ export enum gameStages {
   WaitingForPlayer = "WaitingForPlayer",
   Placement = "Placement",
   Game = "Game",
+  Done = "Done",
 }
 export enum Players {
   player0 = "player0",
@@ -24,6 +25,7 @@ export type GameData = {
   turn: Players;
   player0: PlayerData;
   player1: PlayerData;
+  winner?: Players;
 };
 
 export type GameList = {

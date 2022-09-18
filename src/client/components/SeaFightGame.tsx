@@ -18,7 +18,7 @@ type GamePops = { id: string };
 
 export default function GamePlacement({ id }: GamePops) {
   const dispatch = useDispatch<AppDispatch>();
-  const { gameData, error } = useSelector(selectGame);
+  const { gameData, error, canSavePlacement } = useSelector(selectGame);
   const gameStage = useSelector(selectStage);
 
   console.log("rendering", gameData);
@@ -56,7 +56,10 @@ export default function GamePlacement({ id }: GamePops) {
     GameStageDescription = `Fight:${
       gameData.turn === Players.player0 ? "Your  turn" : "Opponents turn"
     }`;
-  else if (
+  else if (gameStage === gameStages.Done) {
+    GameStageDescription =
+      gameData.winner === Players.player0 ? "You won" : "You loose";
+  } else if (
     [gameStages.Placement, gameStages.WaitingForPlayer].includes(gameStage)
   ) {
     const textReady = gameData.player0.ready
@@ -79,8 +82,11 @@ export default function GamePlacement({ id }: GamePops) {
             rows={gameData?.player0.field.rows}
             onCellClick={handleCellClickField1}
           />
-          {gameStage !== gameStages.Game && (
+          {[gameStages.Placement, gameStages.WaitingForPlayer].includes(
+            gameStage
+          ) && (
             <Button
+              disabled={canSavePlacement}
               caption={gameData.player0.ready ? "Cancel" : "Ready"}
               onClick={handleSave}
             />

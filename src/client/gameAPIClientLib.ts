@@ -1,10 +1,10 @@
-import { Coords, FieldData, GameList } from "../types";
+import { Coords, FieldData } from "../types";
+const { uuid } = require("uuidv4");
 let _secret = "";
 if (typeof window !== "undefined") {
-  // Perform localStorage action
   _secret = localStorage.getItem("secretID") || "";
   if (!_secret) {
-    _secret = crypto.randomUUID();
+    _secret = uuid();
     localStorage.setItem("secretID", _secret);
   }
 }

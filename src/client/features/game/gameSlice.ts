@@ -14,11 +14,13 @@ export type GameState = {
   gameData: GameData | undefined;
   mTime: Date | undefined;
   error?: string;
+  canSavePlacement?: boolean;
 };
 
 const initialState: GameState = {
   gameData: undefined,
   mTime: undefined,
+  canSavePlacement: false,
 };
 
 // This action is what we will call using the dispatch in order to trigger the API call.
@@ -63,19 +65,6 @@ export type MakeActionParams = {
   data?: any;
 };
 
-// export const makeAction = createAsyncThunk<
-//   GameData | undefined,
-//   MakeActionParams
-// >("game/makeAction", async (params: MakeActionParams, thunkAPI) => {
-//   makeAction(
-//       "setPlacement",
-//       { id },
-//       (data: any) => console.log(data),
-//       gameData.player0.field
-//     );
-//   return gameData;
-// });
-
 export const gameSlice = createSlice({
   name: "game",
   initialState,
@@ -95,6 +84,10 @@ export const gameSlice = createSlice({
         if (!seaFightUtils.setupIsCorrect(current(field), false)) {
           cell.ship = !cell.ship;
         }
+        state.canSavePlacement = !seaFightUtils.setupIsCorrect(
+          current(field),
+          true
+        );
       }
     },
   },

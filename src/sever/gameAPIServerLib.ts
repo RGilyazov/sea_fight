@@ -104,6 +104,9 @@ function calculateGameForPlayer(gameData: GameData, player: Players) {
     gameData[player] = d;
     gameData.turn =
       gameData.turn === player ? Players.player0 : Players.player1;
+    if (gameData.winner)
+      gameData.winner =
+        gameData.winner === player ? Players.player0 : Players.player1;
   }
   return gameData;
 }
@@ -132,6 +135,15 @@ function calculateGameStage(data: GameData) {
   else if (data.player0.secret && data.player1.secret)
     data.stage = gameStages.Placement;
   else data.stage = gameStages.WaitingForPlayer;
+
+  if (data.stage === gameStages.Game) {
+    data.winner = undefined;
+    if (seaFightUtils.allShipsDestroyed(data.player0.field))
+      data.winner = Players.player1;
+    if (seaFightUtils.allShipsDestroyed(data.player1.field))
+      data.winner = Players.player0;
+    if (data.winner) data.stage = gameStages.Done;
+  }
 }
 
 export async function setPlacement(
@@ -139,6 +151,12 @@ export async function setPlacement(
   secret: string,
   field: FieldData
 ) {
+  if (!seaFightUtils.setupIsCorrect(field, true)) {
+    throw {
+      status: 400,
+      message: "wrong setup",
+    };
+  }
   const data = await Game.getGame(id);
   const player = await getPlayer(secret, data);
   if (![gameStages.Placement, gameStages.WaitingForPlayer].includes(data.stage))
@@ -182,6 +200,7 @@ export async function shell(
       );
     }
   }
+  calculateGameStage(data);
   Game.saveGame(data);
   calculateGameForPlayer(data, player);
   return data;
@@ -192,7 +211,6 @@ export async function getGameList(): Promise<GameList> {
   const res: GameList = { games: [] };
   const curTime = new Date().getTime();
   for (let game_ of gameList) {
-    //console.log(curTime - game_.lastModified.getTime());
     if (curTime - game_.lastModified.getTime() > GAME_TIMEOUT) continue;
     const game = await Game.getGame(game_.id);
     const playersCount =
@@ -209,7 +227,6 @@ export async function getGameList(): Promise<GameList> {
 export async function playerIsActive(secret: string): Promise<boolean> {
   const lastActivity = await Player.getLastPlayerActivity(secret);
   if (!lastActivity) return false;
-  //console.log(new Date().getTime() - lastActivity.getTime());
   return new Date().getTime() - lastActivity.getTime() < PLAYER_TIMEOUT;
 }
 
