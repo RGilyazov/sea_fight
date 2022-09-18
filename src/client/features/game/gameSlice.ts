@@ -1,7 +1,13 @@
-import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createSlice,
+  current,
+  PayloadAction,
+} from "@reduxjs/toolkit";
 import type { RootState } from "../../app/store";
 import { Coords, GameData, gameStages, Players } from "../../../types";
 import * as gameAPIClient from "../../gameAPIClientLib";
+import * as seaFightUtils from "../../../seaFightUtils";
 
 // declaring the types for our state
 export type GameState = {
@@ -78,14 +84,17 @@ export const gameSlice = createSlice({
       state.mTime = action.payload;
     },
     setGameData: (state, action: PayloadAction<GameData>) => {
-      console.log("setGameData", action.payload);
       state.gameData = action.payload;
     },
     setShip: (state, action: PayloadAction<Coords>) => {
       if (state.gameData) {
         const field = state.gameData.player0.field;
         const { row, col } = action.payload;
-        field.rows[row].cells[col].ship = !field.rows[row].cells[col].ship;
+        const cell = field.rows[row].cells[col];
+        cell.ship = !cell.ship;
+        if (!seaFightUtils.setupIsCorrect(current(field), false)) {
+          cell.ship = !cell.ship;
+        }
       }
     },
   },

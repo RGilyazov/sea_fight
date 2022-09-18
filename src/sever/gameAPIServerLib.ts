@@ -1,3 +1,4 @@
+import Field from "../client/components/Field";
 import {
   GameData,
   RowData,
@@ -8,8 +9,14 @@ import {
   Players,
   Coords,
   GameList,
+  CellData,
 } from "../types";
 import * as Game from "./database/game";
+import * as Player from "./database/player";
+import * as seaFightUtils from "../seaFightUtils";
+
+const PLAYER_TIMEOUT = 60 * 1000;
+const GAME_TIMEOUT = 30 * 60 * 1000;
 
 function CreateRow(): RowData {
   const res: RowData = { cells: [] };
@@ -49,13 +56,16 @@ async function getPlayer(secret: string, data: GameData): Promise<Players> {
   }
 
   if (!player) {
-    if (!data.player0.secret) {
+    const player0IsActive = await playerIsActive(data.player0.secret);
+    const player1IsActive = await playerIsActive(data.player1.secret);
+
+    if (!player0IsActive) {
       player = Players.player0;
       data.player0.secret = secret;
       console.log("joined player0", data.player0.secret);
       calculateGameStage(data);
       await Game.saveGame(data);
-    } else if (!data.player1.secret) {
+    } else if (!player1IsActive) {
       player = Players.player1;
       data.player1.secret = secret;
       console.log("joined player1", data.player0.secret);
@@ -153,14 +163,56 @@ export async function shell(
     return calculateGameForPlayer(data, player);
   const opponent = getOpponent(player);
   const cell = data[opponent].field.rows[coords.row].cells[coords.col];
-  cell.shelled = !cell.shelled;
+  cell.shelled = true;
   if (!cell.ship) data.turn = opponent;
+  else {
+    const field = data[opponent].field;
+    //find nested cells that have ship = true
+    const shipCells = seaFightUtils.getShipCells(field, coords);
+    //if every ship cell is shelled ship is dead
+    const shipIsDead = seaFightUtils.shipIsDead(field, shipCells);
+    //if shipIsDead mark all nested cells as shelled
+    if (shipIsDead) {
+      shipCells.forEach((coords) =>
+        seaFightUtils
+          .getNestedCells(field, coords, true)
+          .forEach(
+            (value) => (field.rows[value.row].cells[value.col].shelled = true)
+          )
+      );
+    }
+  }
   Game.saveGame(data);
   calculateGameForPlayer(data, player);
   return data;
 }
 
 export async function getGameList(): Promise<GameList> {
-  const data = await Game.getGameList();
-  return data;
+  const gameList = await Game.getGameList();
+  const res: GameList = { games: [] };
+  const curTime = new Date().getTime();
+  for (let game_ of gameList) {
+    //console.log(curTime - game_.lastModified.getTime());
+    if (curTime - game_.lastModified.getTime() > GAME_TIMEOUT) continue;
+    const game = await Game.getGame(game_.id);
+    const playersCount =
+      0 +
+      Number(await playerIsActive(game.player0.secret)) +
+      Number(await playerIsActive(game.player1.secret));
+    const timeSinceModified =
+      new Date().getTime() - game_.lastModified.getTime();
+    res.games.push({ ...game_, playersCount, timeSinceModified });
+  }
+  return res;
+}
+
+export async function playerIsActive(secret: string): Promise<boolean> {
+  const lastActivity = await Player.getLastPlayerActivity(secret);
+  if (!lastActivity) return false;
+  //console.log(new Date().getTime() - lastActivity.getTime());
+  return new Date().getTime() - lastActivity.getTime() < PLAYER_TIMEOUT;
+}
+
+export async function updatePlayerActivity(secret: string) {
+  Player.updatePlayerActivity(secret);
 }

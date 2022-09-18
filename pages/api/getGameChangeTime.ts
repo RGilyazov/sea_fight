@@ -11,15 +11,17 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<RespType>
 ) {
-  if (!req.query.id) {
+  if (!req.query?.id || !req.query?.secret) {
     res.status(400).json({
       status: "FAILED",
-      error: "parameter ID is missing or is empty",
+      error: "parameter ID or secret is missing or is empty",
     });
     return;
   }
   const id = req.query.id as string;
+  const secret = req.query.secret as string;
   try {
+    gameAPILib.updatePlayerActivity(secret);
     const data = await gameAPILib.getGameChangeTime(id);
     res.status(200).json({ time: data, status: "OK" });
   } catch (err: any) {

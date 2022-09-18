@@ -27,5 +27,9 @@ export type GameData = {
 };
 
 export type GameList = {
-  games: { id: string; lastModified: Date }[];
+  games: {
+    id: string;
+    timeSinceModified: number;
+    playersCount: number;
+  }[];
 };

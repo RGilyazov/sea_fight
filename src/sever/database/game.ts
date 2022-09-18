@@ -39,13 +39,14 @@ export async function saveGame(GameData: GameData) {
 }
 
 export async function getGameList() {
-  const res: GameList = { games: [] };
+  const res: { id: string; lastModified: Date }[] = [];
   const filenames: string[] = await fsAsync.readdir(GAMES_DIR);
   for (let filename of filenames) {
     const basename = path.basename(filename, path.extname(filename));
-    res.games.push({ id: basename, lastModified: new Date() });
+    const lastModified = await getGameChangeTime(basename);
+    res.push({ id: basename, lastModified: lastModified });
   }
-  res.games.sort((a, b) => {
+  res.sort((a, b) => {
     return Number(a.lastModified > b.lastModified);
   });
   return res;

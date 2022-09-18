@@ -28,15 +28,17 @@ export default function GameList() {
     <div className="flex flex-col items-center ">
       <h1 className="text-2xl"> Select game to join:</h1>
       <div className="flex flex-col gap-2">
-        {gameList.map((el) => (
-          <div className="" key={el.id}>
-            <Link href={`./games/${el.id}`}>
-              <span className="hover:underline cursor-pointer text-2xl ">
-                {el.id}
-              </span>
-            </Link>
-          </div>
-        ))}
+        {gameList
+          .filter((el) => el.playersCount === 1)
+          .map((el) => (
+            <div className="" key={el.id}>
+              <Link href={`./games/${el.id}`}>
+                <span className="hover:underline cursor-pointer text-2xl ">
+                  {el.id + "   " + el.playersCount + " players"}
+                </span>
+              </Link>
+            </div>
+          ))}
         <div className="flex flex-row items-center">
           <input
             id="newGameInput"

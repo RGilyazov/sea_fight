@@ -13,6 +13,7 @@ import { SECRET, setPlacement, shell } from "../gameAPIClientLib";
 import Button from "./Button";
 import { useEffect } from "react";
 import { useGameUpdates } from "../app/hooks";
+
 type GamePops = { id: string };
 
 export default function GamePlacement({ id }: GamePops) {
@@ -28,7 +29,7 @@ export default function GamePlacement({ id }: GamePops) {
 
   useGameUpdates(id, gameStage, gameData?.player0?.ready === true);
 
-  const handleAdd = () => {
+  const handleSave = () => {
     if (gameData)
       setPlacement(id, gameData.player0.field, (data: any) => {
         if ((data.status = "OK")) dispatch(setGameData(data.data));
@@ -37,7 +38,9 @@ export default function GamePlacement({ id }: GamePops) {
 
   const handleCellClickField1 = (coords: Coords) => {
     if ([gameStages.Placement, gameStages.WaitingForPlayer].includes(gameStage))
-      dispatch(setShip(coords));
+      if (gameData) {
+        dispatch(setShip(coords));
+      }
   };
   const handleCellClickField2 = (coords: Coords) => {
     if (gameStage === gameStages.Game)
@@ -65,7 +68,7 @@ export default function GamePlacement({ id }: GamePops) {
         : "";
     GameStageDescription = `${textReady}. ${textOtherPlayer}`;
   }
-  console.log(GameStageDescription);
+
   return (
     <div>
       <div>{GameStageDescription}</div>
@@ -79,7 +82,7 @@ export default function GamePlacement({ id }: GamePops) {
           {gameStage !== gameStages.Game && (
             <Button
               caption={gameData.player0.ready ? "Cancel" : "Ready"}
-              onClick={handleAdd}
+              onClick={handleSave}
             />
           )}
         </div>

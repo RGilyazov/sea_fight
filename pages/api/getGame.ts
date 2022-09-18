@@ -22,9 +22,11 @@ export default async function handler(
   const secret = req.query.secret as string;
   const id = req.query.id as string;
   try {
+    gameAPILib.updatePlayerActivity(secret);
     const data = await gameAPILib.getGameForPlayer(id, secret);
     res.status(200).json({ data: data, status: "OK" });
   } catch (err: any) {
+    console.log
     res
       .status(err?.status || 500)
       .json({ error: err?.message || err, status: "FAILED" });

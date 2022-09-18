@@ -21,14 +21,14 @@ export default async function handler(
     return;
   }
   try {
-    const data = await gameAPILib.shell(
-      String(req.query.id),
-      String(req.query.secret),
-      {
-        row: Number(req.query.row),
-        col: Number(req.query.col),
-      }
-    );
+    const id = req.query.id as string;
+    const secret = req.query.secret as string;
+
+    gameAPILib.updatePlayerActivity(secret);
+    const data = await gameAPILib.shell(String(id), String(secret), {
+      row: Number(req.query.row),
+      col: Number(req.query.col),
+    });
     res.status(200).json({ status: "OK", data: data });
   } catch (err: any) {
     res
